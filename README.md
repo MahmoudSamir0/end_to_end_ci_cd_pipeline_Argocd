@@ -328,49 +328,101 @@ CMD ["-f", "/dev/null"]
 ```
 
 
-agent yaml file s
+agent yaml files
+1. Deployment
 
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: jenkins-agent
-  namespace: jenkins
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: jenkins-agent
-  template:
+    ```yaml
+    apiVersion: apps/v1
+    kind: Deployment
     metadata:
-      labels:
-        app: jenkins-agent
+    name: jenkins-agent
+    namespace: jenkins
     spec:
-      securityContext:
-        fsGroup: 0
-        runAsUser: 0
-      serviceAccountName: jenkins-admin
-      containers:
-        - name: jenkins-agent
-          image: 2534m/agent-jenkins:23
-          lifecycle:
-            postStart:
-              exec:
-                command: ["/bin/sh", "-c", "gpasswd -a jenkins docker && sleep 5 && chmod 666 /var/run/docker.sock"]
-          # resources:
-          #   limits:
-          #     memory: '256Mi'
-          #     cpu: '500m'
-          #   requests:
-          #     memory: '128Mi'
-          #     cpu: '250m'
-          ports:
-            - containerPort: 22
-          volumeMounts:
-            - mountPath: /var/run/docker.sock
-              name: docker-sock
-      volumes:
-        - name: docker-sock
-          hostPath:
-            path: /var/run/docker.sock
-```
+    replicas: 1
+    selector:
+        matchLabels:
+        app: jenkins-agent
+    template:
+        metadata:
+        labels:
+            app: jenkins-agent
+        spec:
+        securityContext:
+            fsGroup: 0
+            runAsUser: 0
+        serviceAccountName: jenkins-admin
+        containers:
+            - name: jenkins-agent
+            image: 2534m/agent-jenkins:23
+            lifecycle:
+                postStart:
+                exec:
+                    command: ["/bin/sh", "-c", "gpasswd -a jenkins docker && sleep 5 && chmod 666 /var/run/docker.sock"]
+            # resources:
+            #   limits:
+            #     memory: '256Mi'
+            #     cpu: '500m'
+            #   requests:
+            #     memory: '128Mi'
+            #     cpu: '250m'
+            ports:
+                - containerPort: 22
+            volumeMounts:
+                - mountPath: /var/run/docker.sock
+                name: docker-sock
+        volumes:
+            - name: docker-sock
+            hostPath:
+                path: /var/run/docker.sock
+    ```
+1. Service
+    ```yaml
+    apiVersion: v1
+    kind: Service
+    metadata:
+    name: jenkins-agent-svc
+    namespace: jenkins
+    spec:
+    selector:
+        app: jenkins-agent
+    ports:
+        - port: 22
+        targetPort: 22
+        protocol: TCP
+    ```
+1. ServiceAccount
+    ```yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+    name: jenkins-admin
+    rules:
+    - apiGroups: ['']
+        resources: ['*']
+        verbs: ['*']
+    ---
+    apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+    name: jenkins-admin
+    namespace: jenkins
+    ---
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+    name: jenkins-admin
+    roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: jenkins-admin
+    subjects:
+    - kind: ServiceAccount
+        name: jenkins-admin
+        namespace: jenkins
+    ```
+you can use argocd  to install agent 
+![](/screenshots/argo_agent_1.png)
+#### Connect agent to jenkins to run pipeline 
+
+1. you need to define agent node  in jenkins  
+The Jenkins master communicates with the agent node, directing specific tasks for execution. Utilizing agent nodes in Jenkins enables task parallelization, optimizing resource use and expediting job execution.
