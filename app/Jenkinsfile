@@ -1,0 +1,106 @@
+pipeline {
+  agent any
+
+  environment {
+    NAME = "argo"
+    VERSION = "1.${env.BUILD_ID}"
+    dockerfpath="${env.workspaceDir}/app"
+    dockerfilepath="${dockerfpath}/Dockerfile"
+    USER_EMAIL = credentials('USER_EMAIL')
+    ECR_REPOSITORY = credentials('ECR_REPOSITORY')
+    ECR_REPO = "${env.ECR_REPOSITORY}/${env.NAME}"
+    IMAGE_TAG= "1.${env.BUILD_ID}"
+    AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+    GIT_USERNAME=credentials('GIT_USERNAME')
+    GIT_PASSWORD=credentials('GIT_PASSWORD')
+    workspaceDir = "${JENKINS_HOME}/workspace/${JOB_NAME}"
+    GIT_APP_URL= 'https://mahmoudsamir0@bitbucket.org/mahmoudsam/continuous-integration.git'
+    GIT_ARGOCD_URL= 'https://mahmoudsamir0@bitbucket.org/mahmoudsam/argocd-manifest.git'
+    }
+  
+  stages {
+    stage('Unit Tests') {
+      steps {
+        echo 'Implement unit tests if applicable.'
+        echo 'This stage is a sample placeholder'
+      }
+    }
+    stage('pull app') {
+      steps {
+          script {
+                  checkout([$class: 'GitSCM', 
+                      branches: [[name: 'master']],
+                      doGenerateSubmoduleConfigurations: false,
+                      extensions: [[$class: 'CleanBeforeCheckout'], [$class: 'RelativeTargetDirectory', relativeTargetDir: env.workspaceDir ]],
+                      userRemoteConfigs: [[url: env.GIT_APP_URL, credentialsId: 'bitbuckt_jenkins']]
+                  ])
+          }
+      }
+    }
+
+    stage('Authenticate with ECR') {
+      steps {
+        script {
+          withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')])  {
+            sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REPOSITORY"
+          }
+        }
+      }
+    }
+    stage('Build and Push Image') {
+      steps {
+sh "docker build -t ${ECR_REPOSITORY}/${NAME}:${IMAGE_TAG} -f ${dockerfilepath} ${dockerfpath}"
+sh "docker push ${env.ECR_REPO}:${IMAGE_TAG}"
+        }
+      }
+
+        stage('pull argocd manifest') {
+            steps {
+                script {
+                        checkout([$class: 'GitSCM', 
+                            branches: [[name: 'master']],
+                            doGenerateSubmoduleConfigurations: false,
+                            extensions: [[$class: 'CleanBeforeCheckout'], [$class: 'RelativeTargetDirectory', relativeTargetDir: env.workspaceDir ]],
+                            userRemoteConfigs: [[url: env.GIT_ARGOCD_URL, credentialsId: 'bitbuckt_jenkins']]
+                        ])
+                }
+            }
+        }
+    
+      stage('Update Manifest') {
+            steps {
+                script {
+                    def directoryPath = "${env.workspaceDir}/app_Manifest"
+                    def fileName = 'deployment.yml'
+                    def fullFilePath = "${directoryPath}/${fileName}"
+                    sh"chmod +x ${fullFilePath}"
+                    sh """
+                    sed -i -E 's#${ECR_REPO}[^ ]*#${ECR_REPO}:${VERSION}#g' ${fullFilePath}
+                    """
+                    sh "cat ${fullFilePath}"
+                      }
+            }
+    }
+
+        stage('Push changes to Bitbucket') {
+            steps {
+                script {
+                sh "git config --global user.email '${USER_EMAIL}'"
+                sh "git config --global user.name '${GIT_USERNAME}'"
+                sh "git add * "
+                sh "git commit -m 'change image to new VERSION ${VERSION}'"
+                    withCredentials([usernamePassword(credentialsId: 'bitbuckt_jenkins', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                        sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/mahmoudsam/argocd-manifest.git  HEAD:master"
+                    }
+                }
+            }
+        }
+  }
+}
+
+
+   triggers {
+     cron('H/5 * * * *')
+   }
+

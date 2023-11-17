@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+
+kind: Deployment
+
+metadata:
+
+  name: final-app
+
+  labels:
+
+    app: final-app
+    type: front-end
+
+spec:
+
+  replicas: 1
+
+  selector:
+
+    matchLabels:
+
+      app: final-app
+      type: front-end
+
+
+
+  template:
+
+    metadata:
+
+      labels:
+
+        app: final-app
+        type: front-end
+
+
+    spec:
+
+      containers:
+
+      - name: final-app
+
+        image: 501220121592.dkr.ecr.us-east-1.amazonaws.com/argo:1.29
+
+        ports:
+
+        - containerPort: 80
+      imagePullSecrets:
+        - name:  argocd-ecr-access
+
+

@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-agent
+  namespace: jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-agent
+  template:
+    metadata:
+      labels:
+        app: jenkins-agent
+    spec:
+      securityContext:
+        fsGroup: 0
+        runAsUser: 0
+      serviceAccountName: jenkins-admin
+      containers:
+        - name: jenkins-agent
+          image: 2534m/agent-jenkins:23
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "gpasswd -a jenkins docker && sleep 5 && chmod 666 /var/run/docker.sock"]
+          # resources:
+          #   limits:
+          #     memory: '256Mi'
+          #     cpu: '500m'
+          #   requests:
+          #     memory: '128Mi'
+          #     cpu: '250m'
+          ports:
+            - containerPort: 22
+          volumeMounts:
+            - mountPath: /var/run/docker.sock
+              name: docker-sock
+      volumes:
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
