@@ -241,3 +241,18 @@ NAME                        TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)  
 service/jenkins             NodePort    10.98.170.80     <none>        8080:31599/TCP   10d
 service/jenkins-agent       ClusterIP   10.102.195.223   <none>        50000/TCP        10d
 ```
+
+1. The Jenkins chart will automatically create an admin password for you. To
+   retrieve it, run:
+
+    ```shell
+    printf $(kubectl get secret --namespace jenkins jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode);echo
+    ```
+
+You should now be able to log in with username `admin` and your auto generated
+password.
+
+![](/screenshots/argo_jenkins_5.png)
+![](/screenshots/argo_jenkins_6.png)
+
+#### Configure and Install jenkins agent 
