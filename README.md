@@ -727,20 +727,74 @@ sh "docker push ${env.ECR_REPO}:${IMAGE_TAG}"
   }
 }
 ```
-### Phase 5: define environment variables
+### Phase 3: define environment variables
 
 - `NAME` - ECR repo name
 - `VERSION` - VERSION for docker image
 - `dockerfpath` - docker file path in app dir 
-- `dockerfilepath`  -docker file path in app dir and name of dockerfile 
-- `USER_EMAIL`
-- `ECR_REPOSITORY`
-- `ECR_REPO`
-- `IMAGE_TAG`
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `GIT_USERNAME`
-- `GIT_PASSWORD`
-- `workspaceDir`
-- `GIT_APP_URL`
-- `GIT_ARGOCD_URL`
+- `dockerfilepath`  - docker file path in app dir and name of dockerfile 
+- `USER_EMAIL` -git user email 
+- `ECR_REPOSITORY`- ecr url 
+- `IMAGE_TAG` - VERSION for docker image tagging 
+- `AWS_ACCESS_KEY_ID` - AWS ACCESS_KEY
+- `AWS_SECRET_ACCESS_KEY` - AWS SECRET ACCESS KEY
+- `GIT_USERNAME` - GIT USERNAME 
+- `GIT_PASSWORD` -
+- `workspaceDir` GIT PASSWORD
+- `GIT_APP_URL` - GIT APP URL
+- `GIT_ARGOCD_URL` - GIT ARGOCD manifest URL
+
+### Phase 4: prepare argocd
+
+1. connect to eks 
+    ```shell
+    aws eks --region <your-region> update-kubeconfig --name <your-cluster-name>
+    ```
+    Verify that kubectl is now configured to use your EKS cluster by checking the cluster information:
+    ```shell
+    kubectl config get-contexts
+    ```
+
+    now add cluster to argocd 
+
+    ```shell
+    argo cluster add <cluster name >
+    ```
+
+1. connect to argocd manfest repo
+open argocd 
+Settings>Repositories>connectrepo
+
+    you can choose via https or ssh 
+    if you choose https you can add username and token you need to genrate in git repo 
+1. apply app from argocd manifest repo
+
+```yaml
+cat << EOF >> sample-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample-app
+  namespace: app
+spec:
+  destination:
+    namespace: sample-app
+    server:<cluster ip>
+  project: sample-project
+  source:
+    path: sample-app/
+    repoURL: <repo url >
+    targetRevision: HEAD
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
+EOF
+```
+
+
+``` shell
+kubectl apply sample-app.yaml
+```
