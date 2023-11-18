@@ -727,3 +727,20 @@ sh "docker push ${env.ECR_REPO}:${IMAGE_TAG}"
   }
 }
 ```
+### Phase 5: define environment variables
+
+- `NAME` - ECR repo name
+- `VERSION` - VERSION for docker image
+- `dockerfpath` - docker file path in app dir 
+- `dockerfilepath`  -docker file path in app dir and name of dockerfile 
+- `USER_EMAIL`
+- `ECR_REPOSITORY`
+- `ECR_REPO`
+- `IMAGE_TAG`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `GIT_USERNAME`
+- `GIT_PASSWORD`
+- `workspaceDir`
+- `GIT_APP_URL`
+- `GIT_ARGOCD_URL`
