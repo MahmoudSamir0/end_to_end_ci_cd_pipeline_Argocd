@@ -469,7 +469,84 @@ java -jar agent.jar -jnlpUrl http://jenkins:8080/computer/agent/jenkins-agent.jn
 
 ## your agent is ready
 
+## before Create a pipeline
+you need to create 3 repo
+### one for our infrastructure 
+```output
+Continuous_Integration_infra
+├── infrastructure
+│   ├── all-modules
+│   │   ├── dynamodb
+│   │   │   ├── main.tf
+│   │   │   ├── output.tf
+│   │   │   └── variables.tf
+│   │   ├── eks
+│   │   │   ├── main.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── variables.tf
+│   │   ├── IAM
+│   │   │   ├── main.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── varibles.tf
+│   │   ├── network
+│   │   │   ├── elastic.tf
+│   │   │   ├── internet.tf
+│   │   │   ├── nat.tf
+│   │   │   ├── output.tf
+│   │   │   ├── rout-privet.tf
+│   │   │   ├── subnet.tf
+│   │   │   ├── variables.tf
+│   │   │   └── vpc.tf
+│   │   ├── s3
+│   │   │   ├── main.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── variables.tf
+│   │   └── security
+│   │       ├── output.tf
+│   │       ├── securityg.tf
+│   │       └── variable.tf
+│   ├── demo-01
+│   │   ├── dynamodb.tf
+│   │   ├── provider.tf
+│   │   ├── README.md
+│   │   └── s3.tf
+│   └── demo-02
+│       ├── backend.tf
+│       ├── domainssl.tf
+│       ├── ekscluster.tf
+│       ├── iam.tf
+│       ├── network&security.tf
+│       ├── provider.tf
+│       ├── README.md
+│       ├── terraform.tfvars
+│       └── variables.tf
+└── Jenkinsfile-infrastructure
 
+```
+### one for our app
+```output
+app
+├── app
+│   ├── Dockerfile
+│   ├── index.html
+│   ├── main.js
+│   ├── styles.css
+│   └── target-file.csv
+├── Jenkinsfile
+└── README.md
+
+``` 
+### one for  argocd-Manifest
+
+```output
+├── app_Manifest
+│   ├── deployment.yml
+│   └── service.yml
+└── jenkins_agents_Manifest
+    ├── agent_svc.yaml
+    ├── agent.yaml
+    └── dockerfile
+```
 ## Create a pipeline
 ### Phase 1: Add your credentials
 1. In the **Jenkins UI**, Click **Credentials** on the left
@@ -485,9 +562,70 @@ Credentials you need you add
 1. GIT_PASSWORD
 1. bitbuckt_jenkins <---- add it as username/password
 
-### Phase 2:  jenkins file 
+### Phase 2:  jenkins file
+#### infrastructure jenkins file
+```groovy
+pipeline {
+  agent any
+  
+environment {
+    AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+  }
+  
+  stages {
+    
+    stage('Terraform Init') {
+      steps {
+        dir('Terraform') {
+          withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+            sh 'terraform init'
+          }
+        }
+      }
+    }
+    
+    stage('Terraform Plan') {
+      steps {
+        dir('Terraform') {
+          withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+            sh 'terraform plan'
+          }
+        }
+      }
+    }
+    
+    stage('Terraform Apply') {
+      steps {
+        dir('Terraform') {
+          withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+            sh 'terraform apply -auto-approve'
+            
+          }
+        }
+      }
+    }
+  }
+}
+```
 
-```output
+**Stage: Terraform Init**
+
+Purpose: This stage initializes Terraform in the specified directory (Terraform).
+
+**Stage: Terraform Plan** 
+
+Purpose: This stage creates an execution plan for Terraform changes.
+
+**Stage: Terraform Apply**
+
+Purpose: This stage applies the Terraform execution plan, making changes to the infrastructure.
+
+
+
+#### app jenkins file
+
+```groovy
 pipeline {
   agent any
 
