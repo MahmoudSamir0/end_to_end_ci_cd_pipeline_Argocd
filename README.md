@@ -426,3 +426,47 @@ you can use argocd  to install agent
 
 1. you need to define agent node  in jenkins  
 The Jenkins master communicates with the agent node, directing specific tasks for execution. Utilizing agent nodes in Jenkins enables task parallelization, optimizing resource use and expediting job execution.
+
+1. open Manage Jenkins 
+2. Manage nodes and clouds
+3. new node
+4. enter any name 
+5. enter name
+6. Remote root directory  copy this (/var/jenkins_home)
+7. **important** Labels copy this (agent)
+8.  Launch method-----------> Launch agent by connecting it to the master
+9. Use WebSocket 
+![](/screenshots/argo_agent_2.png)
+![](/screenshots/argo_agent_3.png)
+![](/screenshots/argo_agent_4.png)
+10. save
+
+
+```shell script
+kubectl get po -n jenkins
+```
+```output
+NAME                             READY   STATUS    RESTARTS       AGE
+jenkins-0                        2/2     Running   31 (17m ago)   11d
+jenkins-agent-5d5ccb8df4-d49hm   1/1     Running   4 (17m ago)    2d14h
+```
+now open your agent
+
+```shell script
+kubectl exec -it -n <name of agent> -- /bin/bash
+```
+
+```shell script
+su jenkins
+```
+```shell script
+curl -sO http://jenkins:8080/jnlpJars/agent.jar
+java -jar agent.jar -jnlpUrl http://jenkins:8080/computer/agent/jenkins-agent.jnlp -secret 74582befe5098ba4bb9287a6e3221b98519461c949dde2dbae00e432358e4dd1 -workDir "/var/jenkins_home/"
+```
+![](/screenshots/argo_agent_5.png)
+![](/screenshots/argo_agent_6.png)
+![](/screenshots/argo_agent_7.png)
+
+## your agent is ready
+
+
