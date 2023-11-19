@@ -1,4 +1,5 @@
 # end_to_end_ci_cd_pipeline_Argocd
+ ![](/screenshots/argocd.png)
 
 ## Project Overview
 ### Objectives:
