@@ -831,48 +831,6 @@ kubectl create secret generic argocd-ecr-access   --from-literal=AWS_ACCESS_KEY_
     1. Now, click on the “Add Webhook” button to save Jenkins GitHub Webhook configurations.
 
 
-### Phase 5: Create a job
+# Conclusion:
 
-This lab uses [Jenkins Pipeline](https://jenkins.io/solutions/pipeline/) to
-define builds as _groovy_ scripts.
-
-Navigate to your Jenkins UI and follow these steps to configure a Pipeline job
-
-1. Click the **Jenkins** link in the top left toolbar, of the ui
-
-1. Click the **New Item** link in the left nav
-
-1. For **item name** use `sample-app`, choose the **Multibranch Pipeline**
-   option, then click **OK**
-
-   ![](docs/img/sample-app.png)
-
-1. Click **Add source** and choose **git**
-
-1. Paste the **HTTPS clone URL** of your `gceme` repo on Cloud Source
-   Repositories into the **Project Repository** field.
-   It will look like:
-   https://source.developers.google.com/p/[REPLACE_WITH_YOUR_PROJECT_ID]/r/gceme
-
-1. From the **Credentials** dropdown, select the name of the credential from
-   Phase 1. It should have the format `PROJECT_ID service account`.
-
-1. Under **Scan Multibranch Pipeline Triggers** section, check the
-   **Periodically if not otherwise run** box, then set the **Interval** value to
-   `1 minute`.
-
-   ![](docs/img/git-credentials.png)
-
-1. Click **Save**, leaving all other options with default values.
-
-   A _Branch indexing_ job was kicked off to identify any branches in your
-   repository.
-
-1. Click **Jenkins** > **sample-app**, in the top menu.
-
-   You should see the `master` branch now has a job created for it.
-
-   The first run of the job will fail, until the _project name_ is set properly
-   in the `Jenkinsfile` next step.
-
-  ![](docs/img/first-build.png)
+This CI/CD pipeline, combining ArgoCD, Amazon ECR, and Jenkins, is tailored for efficient and scalable application deployment on an Amazon EKS cluster. The project sets the foundation for a streamlined and automated development process, fostering collaboration and accelerating time-to-market for containerized applications in an EKS environment.
