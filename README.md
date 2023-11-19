@@ -35,6 +35,8 @@ The primary objectives of this project are to establish a robust CI/CD pipeline 
 
 1. **ArgoCD Dashboard**: ArgoCD offers a user-friendly dashboard for monitoring the deployed applications, providing visibility into the current and desired states.
 
+1. implement monitoring for your automated pipeline. Use ArgoCD's built-in dashboards and logs to troubleshoot any issues that may arise during the deployment process.
+
 ## Getting Started
 
 ### Setup tools
@@ -649,12 +651,6 @@ pipeline {
     }
   
   stages {
-    stage('Unit Tests') {
-      steps {
-        echo 'Implement unit tests if applicable.'
-        echo 'This stage is a sample placeholder'
-      }
-    }
     stage('pull app') {
       steps {
           script {
@@ -799,3 +795,84 @@ EOF
 ``` shell
 kubectl apply sample-app.yaml
 ```
+You need to prepare the app in ArgoCD to make the pipeline automated.
+
+**NOTE**
+You need to add ecr AWS ACCESS KEY ID and AWS_SECRET_ACCESS_KEY to make argocd pull image from ecr 
+
+```shell
+kubectl create secret generic argocd-ecr-access   --from-literal=AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>   --from-literal=AWS_SECRET_ACCESS_KEY=<WS_SECRET_ACCESS_KEY>   --namespace=argocd
+```
+### Phase 4: Create a webhook
+1. bitbucket 
+    1. Now it's time to create a webhook for your own repository. From your repository in Bitbucket, select Repository settings on the left sidebar, then select Webhooks.
+
+    1. Click the Add webhook button to create a webhook for the repository.
+
+    1. Enter Webhook Listener as the Title.
+
+    1. Enter the jenkins URL to the server in the URL field
+    1. Click Save. For the purposes of this tutorial, keep the Triggers as only a Repository Push.
+
+1. github 
+    1. Switch to your GitHub account.
+    Now, go to the `Settings` option on the right corner.
+    1. select the `Webhooks` option and then click on the `Add Webhook` button.
+    1.   It will provide you the blank fields to add the Payload URL where you will paste your Jenkins address, Content type, and other configuration.
+
+    1. Go to your Jenkins tab and copy the URL then paste it in the text field named `Payload URL` .
+
+    1. The “Secret” field is optional. Let’s leave it blank for this Jenkins GitHub Webhook.
+
+    1. Next, choose one option under  `Which events would you like to trigger this webhook?`. The 3 options will do the following events listed below:
+        1. Just the Push Event: It will only send data when someone push into the repository.
+        1. Send Me Everything: It will trigger, if there is any pull or push the event into the repository.
+        1. Let Me Select Individual Events: You can configure for what events you want your data.
+    1. Now, click on the “Add Webhook” button to save Jenkins GitHub Webhook configurations.
+
+
+### Phase 5: Create a job
+
+This lab uses [Jenkins Pipeline](https://jenkins.io/solutions/pipeline/) to
+define builds as _groovy_ scripts.
+
+Navigate to your Jenkins UI and follow these steps to configure a Pipeline job
+
+1. Click the **Jenkins** link in the top left toolbar, of the ui
+
+1. Click the **New Item** link in the left nav
+
+1. For **item name** use `sample-app`, choose the **Multibranch Pipeline**
+   option, then click **OK**
+
+   ![](docs/img/sample-app.png)
+
+1. Click **Add source** and choose **git**
+
+1. Paste the **HTTPS clone URL** of your `gceme` repo on Cloud Source
+   Repositories into the **Project Repository** field.
+   It will look like:
+   https://source.developers.google.com/p/[REPLACE_WITH_YOUR_PROJECT_ID]/r/gceme
+
+1. From the **Credentials** dropdown, select the name of the credential from
+   Phase 1. It should have the format `PROJECT_ID service account`.
+
+1. Under **Scan Multibranch Pipeline Triggers** section, check the
+   **Periodically if not otherwise run** box, then set the **Interval** value to
+   `1 minute`.
+
+   ![](docs/img/git-credentials.png)
+
+1. Click **Save**, leaving all other options with default values.
+
+   A _Branch indexing_ job was kicked off to identify any branches in your
+   repository.
+
+1. Click **Jenkins** > **sample-app**, in the top menu.
+
+   You should see the `master` branch now has a job created for it.
+
+   The first run of the job will fail, until the _project name_ is set properly
+   in the `Jenkinsfile` next step.
+
+  ![](docs/img/first-build.png)
