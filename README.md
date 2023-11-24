@@ -837,18 +837,3 @@ kubectl create secret generic argocd-ecr-access   --from-literal=AWS_ACCESS_KEY_
 # Conclusion:
 
 This CI/CD pipeline, combining ArgoCD, Amazon ECR, and Jenkins, is tailored for efficient and scalable application deployment on an Amazon EKS cluster. The project sets the foundation for a streamlined and automated development process, fostering collaboration and accelerating time-to-market for containerized applications in an EKS environment.
-
-> [!NOTE]  
-> Highlights information that users should take into account, even when skimming.
-
-> [!TIP]
-> Optional information to help a user be more successful.
-
-> [!IMPORTANT]  
-> Crucial information necessary for users to succeed.
-
-> [!WARNING]  
-> Critical content demanding immediate user attention due to potential risks.
-
-> [!CAUTION]
-> Negative potential consequences of an action.
