@@ -436,7 +436,8 @@ The Jenkins master communicates with the agent node, directing specific tasks fo
 4. enter any name 
 5. enter name
 6. Remote root directory  copy this (/var/jenkins_home)
-7. **important** Labels copy this (agent)
+> [!IMPORTANT]  
+> 7. **important** Labels copy this (agent)
 8.  Launch method-----------> Launch agent by connecting it to the master
 9. Use WebSocket 
 ![](/screenshots/argo_agent_2.png)
@@ -797,8 +798,10 @@ kubectl apply sample-app.yaml
 ```
 You need to prepare the app in ArgoCD to make the pipeline automated.
 
-**NOTE**
-You need to add ecr AWS ACCESS KEY ID and AWS_SECRET_ACCESS_KEY to make argocd pull image from ecr 
+
+
+> [!NOTE]  
+> You need to add ecr AWS ACCESS KEY ID and AWS_SECRET_ACCESS_KEY to make argocd pull image from ecr 
 
 ```shell
 kubectl create secret generic argocd-ecr-access   --from-literal=AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>   --from-literal=AWS_SECRET_ACCESS_KEY=<WS_SECRET_ACCESS_KEY>   --namespace=argocd
@@ -834,3 +837,18 @@ kubectl create secret generic argocd-ecr-access   --from-literal=AWS_ACCESS_KEY_
 # Conclusion:
 
 This CI/CD pipeline, combining ArgoCD, Amazon ECR, and Jenkins, is tailored for efficient and scalable application deployment on an Amazon EKS cluster. The project sets the foundation for a streamlined and automated development process, fostering collaboration and accelerating time-to-market for containerized applications in an EKS environment.
+
+> [!NOTE]  
+> Highlights information that users should take into account, even when skimming.
+
+> [!TIP]
+> Optional information to help a user be more successful.
+
+> [!IMPORTANT]  
+> Crucial information necessary for users to succeed.
+
+> [!WARNING]  
+> Critical content demanding immediate user attention due to potential risks.
+
+> [!CAUTION]
+> Negative potential consequences of an action.
